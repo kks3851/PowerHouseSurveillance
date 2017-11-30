@@ -1,0 +1,109 @@
+<script type="text/javascript">
+        var ws;
+        var wsUri = "ws:";
+        var loc = window.location;
+        //var b=document.getElementbyId('btnWs');
+        var man=document.getElementById('btnM');
+        var tra=document.getElementById('btnT');
+        var pl=0;
+        var pr=0;
+        var tu=0;
+        var td=0;
+        console.log(loc);
+        if (loc.protocol === "https:") { wsUri = "wss:"; }
+        // This needs to point to the web socket in the Node-RED flow
+               wsUri += "//" + loc.host + loc.pathname.replace("webcam","ws/webcam");
+
+        function wsConnect() {
+            console.log("connect",wsUri);
+            ws = new WebSocket(wsUri);
+            //var line = "";    // either uncomment this for a building list of messages
+            ws.onmessage = function(msg) {
+                var line = "";  // or uncomment this to overwrite the existing message
+                // parse the incoming message as a JSON object
+                var data = msg.data
+                if (data[0] == 0x69) {
+                  document.getElementById('pic').src = "";
+                    document.getElementById('pic').src = "http://10.106.6.156/image.jpg";
+                    sendValueAll();
+                }
+                else {
+                       console.log(data);
+                // build the output from the topic and payload parts of the object
+                line += "<p>"+data+"</p>";
+                // replace the messages div with the new "line"
+                document.getElementById('messages').innerHTML = line;
+                }
+                
+            }
+            ws.onopen = function() {
+                // update the status div with the connection status
+                document.getElementById('status').innerHTML = "connected";
+                console.log("connected");
+                document.getElementById('mode').innerHTML = "Manual mode engaged."
+            }
+            ws.onclose = function() {
+                // update the status div with the connection status
+                document.getElementById('status').innerHTML = "not connected";
+                // in case of lost connection tries to reconnect every 3 secs
+                setTimeout(wsConnect,3000);
+            }
+        }
+        
+        function sendValueAll() {
+            var val = 'dat' + pl + pr + tu +td;
+            if (ws) { ws.send(val); }
+            pl=0;
+            pr=0;
+            tu=0;
+            td=0;
+        }
+        function doit(m) {
+            if (m== "panright") {
+                pr=pr+1;
+            } else if (m== "panleft") {
+                pl = pl +1;
+            } else if (m== "tiltup") {
+                tu=tu+1;
+            } else {
+                td=td+1;
+            }
+            if (ws) {ws.send(m);}
+        }
+        function doit1(m) {
+            if (ws) { ws.send(m); 
+                document.getElementById('mode').innerHTML = "Manual mode engaged."
+            }
+            
+        }
+        function doit2(m) {
+            if (ws) { ws.send(m); 
+                document.getElementById('mode').innerHTML = "Tracking mode engaged."
+            }
+            
+        }
+        function newEl(tag){return document.createElement(tag);}
+    var cv = require('../lib/opencv');
+
+/*var COLOR = [0, 255, 0]; // default red
+var thickness = 2; // default 1
+
+cv.readImage('./files/mona.png', function(err, im) {
+  if (err) throw err;
+  if (im.width() < 1 || im.height() < 1) throw new Error('Image has no size');
+
+  im.detectObject('../data/haarcascade_frontalface_alt2.xml', {}, function(err, faces) {
+    if (err) throw err;
+
+    for (var i = 0; i < faces.length; i++) {
+      face = faces[i];
+      im.rectangle([face.x, face.y], [face.width, face.height], COLOR, 2);
+    }
+
+    im.save('./tmp/face-detection-rectangle.png');
+    console.log('Image saved to ./tmp/face-detection-rectangle.png');
+  });
+
+});*/
+    </script>
+
